@@ -5,7 +5,7 @@ function result = voxelwise_log_reg(DB, Y, X)
 %
 % Inputs:
 %   DB: database object from Meta_Activation_FWE.m
-%   Y: fmri_data object
+%   Y: contrast indicator maps in fmri_data object
 %   X: regressor design matrix
 %  
 % Outputs:
@@ -19,7 +19,7 @@ function result = voxelwise_log_reg(DB, Y, X)
 % create index from included cons %
 c = find(DB.included_cons');
 
-y = CIMs.get_wh_image(c);
+y = Y.get_wh_image(c);
 
 y = y.dat;
 
@@ -35,7 +35,7 @@ y = y.dat;
 %% OLD - REMOVE?
 
 % global dims
-% global cols
+global cols
 % 
 % spm_defaults; defaults.analyze.flip = 0;
 % doload = 0;
@@ -44,7 +44,7 @@ y = y.dat;
 % dims = Y.volInfo.dim;
 % 
 % % set up predictor cols from design matrix
-% cols = size(X,2);
+cols = size(X,2);
 
 %% study weights 
 w = DB.studyweight;
@@ -79,14 +79,14 @@ w = w ./ mean(w);
 % if ~isempty(Xi), avgs = NaN * zeros([dims(1:2) size(Xi,1)]);, end
 
 %% output images -- initialize
-betas = NaN * repmat(zeros(size(omnibus.dat)), 1, cols);
+betas = NaN * repmat(zeros(size(Y.dat(:, 1))), 1, cols);
 t = betas;
 p = betas;
 
-Fmap = NaN * zeros(size(omnibus.dat));
-omnp = ones([size(omnibus.dat)]);
+Fmap = NaN * zeros(size(Y.dat(:, 1)));
+omnp = ones([size(Y.dat)]);
 
-omnchi2 = NaN * zeros([size(omnibus.dat)]);
+omnchi2 = NaN * zeros([size(Y.dat(:, 1))]);
 chi2pmap = omnp;
 chi2warn = Fmap;
 
@@ -141,5 +141,10 @@ for k = 1:length(y)
 end
 
 % save('FirstTryLog.mat');
+
+% write to statistic image %
+result = statistic_image('dat', t(:, 1), 'type', 'T', 'dfe', df2);
+result.volInfo = omnibus.volInfo;
+
 
 
