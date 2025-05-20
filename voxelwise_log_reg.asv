@@ -1,0 +1,127 @@
+function result = voxelwise_log_reg(Y, X)
+
+% This function is compatible with neuroimaging data in Tor Wager's CanlabCore
+% format.  
+%
+% Inputs:
+%   Y: fmri_data object
+%   X: regressor design matrix
+%  
+% Outputs:
+%   result: statistic object with t, df, and p-val in brain space
+%
+% Note: code dependent on CanlabCore repository (and thanks to Tor Wager for allowing
+% me to pull pieces from Meta_Logistic.m).
+
+%% PULL THIS OUT OF CODE EVENTUALLY?
+% ---------------------------------------
+% Set up design matrix
+% names = contrast names, also output image names
+% prunes DB
+% ---------------------------------------
+
+[X,names,DB,Xi,Xinms,condf,testfield] = Meta_Logistic_Design(DB);
+
+%%
+
+global dims
+global cols
+
+spm_defaults; defaults.analyze.flip = 0;
+doload = 0;
+
+% get map dimensions
+dims = Y.volInfo.dim;
+
+% set up predictor cols from design matrix
+cols = size(X,2);
+
+w = DB.studyweight;
+w = w ./ mean(w); 
+
+% load canlab core brain mask
+% UPDATE TO VARARGIN SO FLEXIBLE
+mask_path = which('brainmask.nii');
+
+mask = fmri_data(mask_path);
+
+% display # voxels
+nvox = mask.dat; nvox = sum(nvox>0);
+fprintf(1,'\nVoxels in mask: %3.2f\n',nvox);
+
+% output images -- initialize
+% --------------------------------------------
+betas = NaN * zeros([dims(1:2) cols]);
+t = betas;
+p = ones([dims(1:2) cols]);
+
+Fmap = NaN * zeros([dims(1:2)]);
+omnp = ones([dims(1:2)]);
+
+omnchi2 = NaN * zeros([dims(1:2)]);
+chi2pmap = omnp;
+chi2warn = Fmap;
+
+if ~isempty(Xi), avgs = NaN * zeros([dims(1:2) size(Xi,1)]);, end
+
+% chi sq test
+[chi2,df,chi2p,sig,warn,tab] = chi2test([Y.dat condf],'obs',w,1);
+
+omnchi2(i(k),j(k)) = chi2;
+chi2pmap(i(k),j(k)) = chi2p; 
+chi2warn(i(k),j(k)) = warn;
+
+    % logistic regression
+    % --------------------------------------------
+
+    if any(tab(:) == 0)
+        %  We can't run Logistic for this voxel; it won't be meaningful.
+        
+        % Logistic regression does not return accurate results if the
+        % proportions are 100% (i.e., if some cells in tab table are empty)
+        % If so, shrink values a bit so that we can estimate regression
+        
+        y(y==0) = 0+.01;
+        y(y==1) = 1-.01;
+    end
+    
+    %else
+        [b,dev,stats]=glmfit(X,[y ones(size(y))],'binomial','logit','off',[],w); % pvals are more liberal than Fisher's Exact!
+
+        % omnibus test - R^2 change test
+        % --------------------------------------------------------
+        sstot = y'*y;
+        r2full = (sstot - (stats.resid' * stats.resid)) ./ sstot;
+        dffull = stats.dfe;
+
+        [br,devr,statsr]=glmfit(ones(size(y)),[y ones(size(y))],'binomial','logit','off',[],w,'off');
+        r2red = (sstot - (statsr.resid' * statsr.resid)) ./ sstot;
+        dfred = statsr.dfe;
+
+        if r2full < r2red, fprintf(1,'Warning!'); r2red = r2full;,drawnow; fprintf(1,'\b\b\b\b\b\b\b\b'); end
+        [F,op,df1,df2] = compare_rsquare_noprint(r2full,r2red,dffull,dfred);
+        % --------------------------------------------------------
+        
+        % save output from voxel
+        % --------------------------------------------
+        betas(i(k),j(k),:) = b(2:end);
+        t(i(k),j(k),:) = stats.t(2:end);
+        p(i(k),j(k),:) = stats.p(2:end);
+
+        Fmap(i(k),j(k)) = F;
+        omnp(i(k),j(k)) = op;
+    %end
+        
+    
+    if mod(k,10)==0, fprintf(1,'\b\b\b\b%04d',k);,end
+    %if k == 1000, fprintf(1,'%3.0f s per 1000 vox.',etime(clock,et)), end
+end
+fprintf(1,'\b\b\b\b');
+
+warning on
+
+if vb > 1, fprintf(1,[repmat('\b',1,14+9) ' elapsed: %3.0f s'],etime(clock,et));, end
+
+clear sl
+
+
