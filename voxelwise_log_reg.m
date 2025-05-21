@@ -144,7 +144,7 @@ end
 
 % write to statistic image %
 result = statistic_image('dat', t(:, 1), 'type', 'T', 'dfe', df2);
-result.volInfo = omnibus.volInfo;
+result.volInfo = Y.volInfo;
 
 
 
