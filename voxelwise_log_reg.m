@@ -1,7 +1,9 @@
 function result = voxelwise_log_reg(DB, Y, X)
 
 % This function is compatible with neuroimaging data in Tor Wager's CanlabCore
-% format.  
+% format. It requires that (1) you have a database structure and (2) that
+% you have an fmri_data object containing contrast indicator maps for each
+% study/contrast.   
 %
 % Inputs:
 %   DB: database object from Meta_Activation_FWE.m
