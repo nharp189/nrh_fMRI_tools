@@ -1,4 +1,4 @@
-function result = voxelwise_log_reg(DB, Y, X)
+function [t_result, betas, t, p] = voxelwise_log_reg(DB, Y, X)
 
 % This function is compatible with neuroimaging data in Tor Wager's CanlabCore
 % format. It requires that (1) you have a database structure and (2) that
@@ -19,7 +19,7 @@ function result = voxelwise_log_reg(DB, Y, X)
 %% index which contrasts to use, select relevant CIMs
 
 % create index from included cons %
-c = find(DB.included_cons');
+c = find(DB.included_cons == 1);
 
 y = Y.get_wh_image(c);
 
@@ -145,8 +145,13 @@ end
 % save('FirstTryLog.mat');
 
 % write to statistic image %
-result = statistic_image('dat', t(:, 1), 'type', 'T', 'dfe', df2);
-result.volInfo = Y.volInfo;
+t_result = statistic_image('dat', t, 'type', 'T', 'dfe', df2);
+t_result.volInfo = Y.volInfo;
+
+% b_result = statistic_image('dat', betas, 'type', 'b', 'dfe', df2);
+% b_result.volInfo = Y.volInfo;
+
+return
 
 
 
