@@ -46,7 +46,7 @@ global cols
 % dims = Y.volInfo.dim;
 % 
 % % set up predictor cols from design matrix
-cols = size(X,2);
+cols = size(X,2)+1;
 
 %% study weights 
 w = DB.studyweight;
@@ -95,18 +95,23 @@ chi2warn = Fmap;
 %% voxel-wise logistic regression
 
 % loop through voxels, run & save stats %
-for k = 1:length(y)
 
-    if any(y(:) == 0)
-        %  We can't run Logistic for this voxel; it won't be meaningful.
-        
-        % Logistic regression does not return accurate results if the
-        % proportions are 100% (i.e., if some cells in tab table are empty)
-        % If so, shrink values a bit so that we can estimate regression
-        
-        y(y==0) = 0+.01;
-        y(y==1) = 1-.01;
-    end
+% 187244
+
+for k = 1:length(y)
+% 
+% for k = 187244
+
+%     if any(y(:) == 0)
+%         %  We can't run Logistic for this voxel; it won't be meaningful.
+%         
+%         % Logistic regression does not return accurate results if the
+%         % proportions are 100% (i.e., if some cells in tab table are empty)
+%         % If so, shrink values a bit so that we can estimate regression
+%         
+%         y(y==0) = 0+.01;
+%         y(y==1) = 1-.01;
+%     end
 
     % logistic regression at a voxel %
     [b,dev,stats]=glmfit(X,[y(k, :)' ones(size(y(k, :)'))],'binomial','logit','off',[],w); % pvals are more liberal than Fisher's Exact!
@@ -127,9 +132,9 @@ for k = 1:length(y)
         
         % save output from voxel
         % --------------------------------------------
-        betas(k,:) = b(2:end);
-        t(k,:) = stats.t(2:end);
-        p(k,:) = stats.p(2:end);
+        betas(k,:) = b(1:end);
+        t(k,:) = stats.t(1:end);
+        p(k,:) = stats.p(1:end);
 
 %         Fmap(k) = F;
 %         omnp(k) = op;
