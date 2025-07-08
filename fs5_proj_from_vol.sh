@@ -1,5 +1,9 @@
 #!/bin/bash
 
+export FREESURFER_HOME=/Applications/freesurfer/8.0.0
+export SUBJECTS_DIR=$FREESURFER_HOME/subjects
+source $FREESURFER_HOME/SetUpFreeSurfer.sh
+
 for hemi in lh rh; do
   for vol in /Users/nicholasharp/Desktop/spintests_v2/ns_fi_FWE_height/*.nii; do
     name=$(basename "$vol" .nii)

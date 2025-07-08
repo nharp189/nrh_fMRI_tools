@@ -32,8 +32,25 @@ datal1=importdata(readleft1); datal1 = datal1; % .data(); % .data() part may or 
 datar1=importdata(readright1); datar1 = datar1; % .data();
 datal2=importdata(readleft2); datal2 = datal2; % .data();
 datar2=importdata(readright2); datar2 = datar2; % .data();
-datal3=importdata(ctlleft); datal3 = datal3;
-datar3=importdata(ctlright); datar3=datar3;
+
+% initialize ctl matrices %
+datal3 = [];
+datar3 = [];
+
+% loop through ctl datasets %
+for l = 1:size(ctlleft)
+    
+    datal3_temp=importdata(string(ctlleft(l))); 
+    datal3 = [datal3, datal3_temp];
+
+end
+
+for r = 1:size(ctlright)
+
+    datar3_temp=importdata(string(ctlright(r)));
+    datar3 = [datar3, datar3_temp];
+
+end
 
 % Label medial wall vertices with NaN (07/31/2020):
 datal1(v_exclude_left) = NaN;
